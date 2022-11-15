@@ -1,4 +1,4 @@
-# education_project_vue_3
+# cripto_coins_info
 
 ## Project setup
 ```
