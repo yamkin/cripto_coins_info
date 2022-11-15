@@ -1,18 +1,18 @@
 <template>
   <div class="container mx-auto flex flex-col items-center bg-gray-100 p-4">
-<!--    <div class="fixed w-100 h-100 opacity-80 bg-purple-800 inset-0 z-50 flex items-center justify-center">-->
-<!--      <svg class="animate-spin -ml-1 mr-3 h-12 w-12 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">-->
-<!--        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>-->
-<!--        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>-->
-<!--      </svg>-->
-<!--    </div>-->
+    <!--    <div class="fixed w-100 h-100 opacity-80 bg-purple-800 inset-0 z-50 flex items-center justify-center">-->
+    <!--      <svg class="animate-spin -ml-1 mr-3 h-12 w-12 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">-->
+    <!--        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>-->
+    <!--        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>-->
+    <!--      </svg>-->
+    <!--    </div>-->
     <div class="container">
       <section>
         <div class="flex">
           <div class="max-w-xs">
             <label for="wallet" class="block text-sm font-medium text-gray-700"
-            >Тикер</label
-            >
+            >Тикер
+            </label>
             <div class="mt-1 relative rounded-md shadow-md">
               <input
                   v-model="ticker"
@@ -23,22 +23,24 @@
                   class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
                   placeholder="Например DOGE"
               />
-            </div>
-<!--            <div class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap">-->
-<!--            <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">-->
-<!--              BTC-->
-<!--            </span>-->
-<!--              <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">-->
-<!--              DOGE-->
-<!--            </span>-->
-<!--              <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">-->
-<!--              BCH-->
-<!--            </span>-->
-<!--              <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">-->
-<!--              CHD-->
-<!--            </span>-->
-<!--            </div>-->
-<!--            <div class="text-sm text-red-600">Такой тикер уже добавлен</div>-->
+            </div >
+            <!--            <div class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap">-->
+            <!--            <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">-->
+            <!--              BTC-->
+            <!--            </span>-->
+            <!--              <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">-->
+            <!--              DOGE-->
+            <!--            </span>-->
+            <!--              <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">-->
+            <!--              BCH-->
+            <!--            </span>-->
+            <!--              <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">-->
+            <!--              CHD-->
+            <!--            </span>-->
+            <!--            </div>-->
+            <div
+                :class="{'hidden': error }"
+                class="text-sm text-red-600">Такой тикер уже добавлен</div>
           </div>
         </div>
         <button
@@ -156,31 +158,6 @@
       </section>
     </div>
   </div>
-<!--<div class="wrapper">-->
-<!--  <form class="form" @submit.prevent>-->
-<!--    <h2>Добавить задачу</h2>-->
-<!--    <label for="">-->
-<!--      <input v-model="task.name" type="text" placeholder="Заголовок">-->
-<!--    </label>-->
-<!--    <label for="">-->
-<!--      <input v-model="task.text" type="text" placeholder="Текст">-->
-<!--    </label>-->
-<!--    <button @click="addTask" @keydown.enter="addTask">Добавить</button>-->
-<!--  </form>-->
-<!--  <button @click="deleteAll">Удалить все</button>-->
-<!--  <hr v-if="tasks.length"/>-->
-
-<!--  <div-->
-<!--      v-for="(t,i) in tasks"-->
-<!--      :key="t.id"-->
-<!--      class="task"-->
-<!--  >-->
-
-<!--    <h2><span>ID:{{ t.id }}</span>Name task: {{ t.name }}</h2>-->
-<!--    <p>Text task{{ t.text }}</p>-->
-<!--    <button @click="removeTask(i)">Удалить</button>-->
-<!--  </div>-->
-<!--</div>-->
 </template>
 
 <script>
@@ -192,42 +169,46 @@ export default {
       ticker: '',
       tickers: [],
       sel:null,
-      graph:[]
+      graph:[],
+      error: true,
+      coins:[]
     }
   },
   methods: {
+    subscribeToUpdate(tickerName) {
+      setInterval(async () => {
+        const response = await fetch(`https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api_key=9522fb410b1e48c67c35f297a689936f0c78d87af7e3cc8967c98b544dcf2106`)
+        const data = await response.json()
+        this.tickers.find(t => t.name === tickerName).price = data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2)
+        if(this.sel?.name === tickerName) {
+          this.graph.push(data.USD)
+        }
+      },3000)
+    },
+
     addTask() {
       const currentTicker = {
-        name: this.ticker,
+        name: this.ticker.toUpperCase(),
         price: "-"
       }
-      if(currentTicker.name) {
-        this.tickers.push(currentTicker)
-        // console.log(this.tickers)
-        // setInterval(() => {
-        //   fetch(`https://min-api.cryptocompare.com/data/price?fsym=${currentTicker.name}&tsyms=USD&api_key=9522fb410b1e48c67c35f297a689936f0c78d87af7e3cc8967c98b544dcf2106`)
-        //       .then((response) => {
-        //         return response.json();
-        //       })
-        //       .then((data) => {
-        //         // console.log(data);
-        //         this.tickers.find(t => t.name === currentTicker.name).price = data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2)
-        //         if(this.sel?.name === currentTicker.name) {
-        //           this.graph.push(data.USD)
-        //         }
-        //       });
-        // },3000)
-        setInterval(async () => {
-          const response = await fetch(`https://min-api.cryptocompare.com/data/price?fsym=${currentTicker.name}&tsyms=USD&api_key=9522fb410b1e48c67c35f297a689936f0c78d87af7e3cc8967c98b544dcf2106`)
-          const data = await response.json()
-          console.log(data)
-          this.tickers.find(t => t.name === currentTicker.name).price = data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2)
-          if(this.sel?.name === currentTicker.name) {
-            this.graph.push(data.USD)
-          }
-        },3000)
+      //если введено что то в input то добавляем в массив тикеров
+      if(this.ticker && this.coins.find((e) => e === currentTicker.name)){
+        if(!this.tickers.find((t) => t.name.toUpperCase() === currentTicker.name.toUpperCase())) {
+          this.tickers.push(currentTicker)
+          localStorage.setItem('coins-list', JSON.stringify(this.tickers))
+          this.subscribeToUpdate(currentTicker.name)
+        } else {
+          this.error = false
+        }
       }
-      this.ticker = ''
+      // this.ticker = ''
+    },
+    async getCoinsData() {
+      const response = await fetch(`https://min-api.cryptocompare.com/data/all/coinlist?summary=true`)
+      const {Data} = await response.json()
+      for (let key in Data) {
+        this.coins.push(Data[key].Symbol)
+      }
     },
     removeTask(i) {
       // this.tasks = this.tasks.filter((el,ind) => ind !== i)
@@ -251,37 +232,23 @@ export default {
       this.sel = null
     }
 
+  },
+  mounted() {
+    this.getCoinsData()
+  },
+  created() {
+    const tickedData = localStorage.getItem('coins-list')
+
+    if(tickedData) {
+      this.tickers = JSON.parse(tickedData)
+      this.tickers.forEach((ticker) => {
+        this.subscribeToUpdate(ticker.name)
+      })
+    }
   }
 }
 </script>
 
 <style>
 
-/*.wrapper {*/
-/*  margin: auto;*/
-/*  max-width: 1400px;*/
-/*}*/
-
-/*.form {*/
-/*  display: grid;*/
-/*  justify-items: center;*/
-/*  margin: auto;*/
-/*  padding: 10px;*/
-/*  max-width: 300px;*/
-/*  border: 1px solid #000;*/
-/*  border-radius: 10px;*/
-/*}*/
-
-/*.form > label {*/
-/*  margin-bottom: 5px;*/
-/*}*/
-
-/*.form > label > input {*/
-/*  padding: 5px;*/
-/*}*/
-
-/*.form button {*/
-/*  padding: 5px;*/
-/*  max-width: 200px;*/
-/*}*/
 </style>>
