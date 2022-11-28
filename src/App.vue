@@ -73,14 +73,55 @@
           </svg>
           Удалить все
         </button>
+        <hr
+            v-if="tickers.length"
+            class="w-full border-t border-gray-600 my-4"
+        />
       </section>
 
-      <hr
-          v-if="tickers.length"
-          class="w-full border-t border-gray-600 my-4" />
+      <section>
+        <div class="flex">
+          <div class="max-w-xs">
+            <label for="wallet" class="block text-sm font-medium text-gray-700"
+            >Фильтр
+            </label>
+            <div class="mt-1 relative rounded-md shadow-md">
+              <input
+                  v-model="filter"
+                  type="text"
+                  name="wallet"
+                  id="wallet"
+                  class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
+                  placeholder="Например DOGE"
+              />
+            </div >
+          </div >
+        </div>
+        <button
+            v-if="page > 1"
+            @click="page = page - 1"
+            type="button"
+            class="mr-2 my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+        >
+          Назад
+        </button>
+        <button
+            v-if="hasNextPage"
+            @click="page = page + 1"
+            type="button"
+            class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+        >
+          Вперед
+        </button>
+        <hr
+            v-if="tickers.length"
+            class="w-full border-t border-gray-600 my-4"
+        />
+      </section>
+
       <dl v-if="tickers.length" class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div
-            v-for=" (t,i) in tickers"
+            v-for=" (t,i) in filteredTickers()"
             :key="t.i"
             @click="selectTicker(t)"
             :class="{'border-4': sel === t}"
@@ -167,11 +208,14 @@ export default {
   data() {
     return {
       ticker: '',
+      filter:'',
       tickers: [],
       sel:null,
       graph:[],
       error: true,
-      coins:[]
+      coins:[],
+      page: 1,
+      hasNextPage: true
     }
   },
   methods: {
@@ -186,11 +230,23 @@ export default {
       },3000)
     },
 
+    // 1 --- 0, 5
+    // 2 --- 6, 11
+    // (6 * (page - 1), 6 * page - 1)
+    filteredTickers(){
+      const start = (this.page - 1) * 6 // начало фильтрации
+      const end = this.page * 6 // конец фильтрации
+      const filteredTickers =  this.tickers.filter((ticker) => ticker.name.includes(this.filter.toUpperCase()))
+      this.hasNextPage = filteredTickers.length > end
+      return filteredTickers.slice(start,end)
+    },
+
     addTask() {
       const currentTicker = {
         name: this.ticker.toUpperCase(),
         price: "-"
       }
+
       //если введено что то в input то добавляем в массив тикеров
       if(this.ticker && this.coins.find((e) => e === currentTicker.name)){
         if(!this.tickers.find((t) => t.name.toUpperCase() === currentTicker.name.toUpperCase())) {
@@ -201,7 +257,8 @@ export default {
           this.error = false
         }
       }
-      // this.ticker = ''
+      this.filter = ''
+      this.ticker = ''
     },
     async getCoinsData() {
       const response = await fetch(`https://min-api.cryptocompare.com/data/all/coinlist?summary=true`)
@@ -209,15 +266,17 @@ export default {
       for (let key in Data) {
         this.coins.push(Data[key].Symbol)
       }
+      console.log(this.coins)
     },
     removeTask(i) {
       // this.tasks = this.tasks.filter((el,ind) => ind !== i)
       this.tickers.splice(i,1)
     },
+
     deleteAll() {
       this.tickers = []
       this.sel = null
-
+      localStorage.removeItem('coins-list')
     },
     normalizeGraph() {
       const maxVal = Math.max(...this.graph)
@@ -237,6 +296,16 @@ export default {
     this.getCoinsData()
   },
   created() {
+    const windowData = Object.fromEntries(new URL(window.location).searchParams.entries())
+
+    if(windowData.filter) {
+      this.filter = windowData.filter
+    }
+
+    if(windowData.page) {
+      this.page = windowData.page
+    }
+
     const tickedData = localStorage.getItem('coins-list')
 
     if(tickedData) {
@@ -245,10 +314,27 @@ export default {
         this.subscribeToUpdate(ticker.name)
       })
     }
+  },
+
+  watch:{
+    filter() { // если обновилась переменная filter обновляется страница
+      this.page = 1
+      window.history.pushState(
+          null,
+          document.title,
+          `${window.location.pathname}?filter=${this.filter}&page=${this.page}`)
+    },
+    page() { // если обновилась переменная page обновляется страница
+
+      window.history.pushState(
+          null,
+          document.title,
+          `${window.location.pathname}?filter=${this.filter}&page=${this.page}`)
+    },
   }
 }
 </script>
 
 <style>
 
-</style>>
+</style>
